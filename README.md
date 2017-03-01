@@ -4,7 +4,7 @@
 
 RPHC uses a JSON message protocol.
  
- ### Connection
+ **_Connection_**
  
  When a client connects to the server, the server sends a welcome message alongside
  useful information to setup the client.

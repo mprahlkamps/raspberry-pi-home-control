@@ -1,12 +1,14 @@
 package de.pk.rphc.server;
 
-import java.net.InetSocketAddress;
-
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.InetSocketAddress;
 
 public class ControlServer extends WebSocketServer {
 
@@ -27,6 +29,7 @@ public class ControlServer extends WebSocketServer {
 	@Override
 	public void onOpen(WebSocket connection, ClientHandshake handshake) {
 		logger.info("(" + connection.getRemoteSocketAddress() + ") New Connection");
+		sendWelcomeMessage(connection);
 	}
 
 	@Override
@@ -39,4 +42,22 @@ public class ControlServer extends WebSocketServer {
 		logger.error("(" + connection.getRemoteSocketAddress() + ") Error", exception);
 	}
 
+	private void sendWelcomeMessage(WebSocket connection) {
+		JSONObject message = new JSONObject();
+		message.put("type", "welcome");
+
+		JSONArray availableModules = new JSONArray();
+		message.put("available-modules", availableModules);
+
+		JSONObject ledControllerModule = new JSONObject();
+		ledControllerModule.put("name", "LedController");
+		availableModules.put(ledControllerModule);
+
+		JSONObject lightControllerModule = new JSONObject();
+		lightControllerModule.put("name", "LightController");
+		lightControllerModule.put("available-lights", "5");
+		availableModules.put(lightControllerModule);
+
+		connection.send(message.toString());
+	}
 }

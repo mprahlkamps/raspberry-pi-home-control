@@ -15,6 +15,7 @@ RPHC uses a JSON message protocol.
    "available-modules": []
  }
  ```
+ 
  * **type** - the type of the message
  * **available-modules** - an array representing available modules on this server and
     information about them

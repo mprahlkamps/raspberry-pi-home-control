@@ -12,15 +12,47 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <build.directory>${project.basedir}/target/final</build.directory>
+        <scp.host/>
+        <scp.user/>
+        <scp.password/>
+        <scp.destinationDir/>
     </properties>
 
     <build>
         <plugins>
             <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.0.2</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${build.directory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}</directory>
+                                    <includes>
+                                        <include>config.properties</include>
+                                        <include>modules.properties</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.0.0</version>
 
                 <configuration>
+                    <outputDirectory>${build.directory}</outputDirectory>
                     <archive>
                         <manifest>
                             <mainClass>de.pk.rphc.App</mainClass>
@@ -43,10 +75,51 @@
                 </executions>
 
             </plugin>
+
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <configuration>
+                    <target>
+                        <scp toDir="${scp.user}@${scp.host}:${scp.destinationDir}" verbose="true"
+                             password="${scp.password}" trust="true">
+                            <fileset dir="${build.directory}/"/>
+                        </scp>
+                    </target>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>scp</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.jcraft</groupId>
+                        <artifactId>jsch</artifactId>
+                        <version>0.1.53</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.ant</groupId>
+                        <artifactId>ant-jsch</artifactId>
+                        <version>1.9.6</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
         </plugins>
     </build>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.pi4j</groupId>
+            <artifactId>pi4j-core</artifactId>
+            <version>1.1</version>
+        </dependency>
+
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
@@ -77,6 +150,5 @@
             <version>3.8.1</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 </project>

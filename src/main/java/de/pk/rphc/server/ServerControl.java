@@ -1,5 +1,6 @@
 package de.pk.rphc.server;
 
+import de.pk.rphc.modules.ModuleController;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -10,20 +11,26 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 
-public class ControlServer extends WebSocketServer {
+public class ServerControl extends WebSocketServer {
 
 	private Logger logger;
+	private ModuleController moduleController;
 
-	public ControlServer(InetSocketAddress address) {
+	public ServerControl(InetSocketAddress address) {
 		super(address);
 
-		logger = LoggerFactory.getLogger(ControlServer.class);
-		logger.info("Staring Control Server (" + address + ")");
+		logger = LoggerFactory.getLogger(ServerControl.class);
+		logger.info("Starting Control Server (" + address + ")");
+
+		moduleController = ModuleController.getInstance();
+
 	}
 
 	@Override
 	public void onMessage(WebSocket connection, String message) {
 		logger.debug("(" + connection.getRemoteSocketAddress() + ") New message: " + message);
+
+
 	}
 
 	@Override

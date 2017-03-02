@@ -4,7 +4,6 @@ import de.pk.rphc.modules.ModuleController;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +22,6 @@ public class ServerControl extends WebSocketServer {
 		logger.info("Starting Control Server (" + address + ")");
 
 		moduleController = ModuleController.getInstance();
-
 	}
 
 	@Override
@@ -50,21 +48,10 @@ public class ServerControl extends WebSocketServer {
 	}
 
 	private void sendWelcomeMessage(WebSocket connection) {
-		JSONObject message = new JSONObject();
-		message.put("type", "welcome");
+		JSONObject welcomeMessage = new JSONObject();
+		welcomeMessage.put("type", "welcome");
+		welcomeMessage.put("available-modules", moduleController.getAvailableModules());
 
-		JSONArray availableModules = new JSONArray();
-		message.put("available-modules", availableModules);
-
-		JSONObject ledControllerModule = new JSONObject();
-		ledControllerModule.put("name", "LedController");
-		availableModules.put(ledControllerModule);
-
-		JSONObject lightControllerModule = new JSONObject();
-		lightControllerModule.put("name", "LightController");
-		lightControllerModule.put("available-lights", "5");
-		availableModules.put(lightControllerModule);
-
-		connection.send(message.toString());
+		connection.send(welcomeMessage.toString());
 	}
 }

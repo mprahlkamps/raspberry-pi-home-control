@@ -1,11 +1,13 @@
 package de.pk.rphc.modules;
 
-import com.pi4j.io.gpio.*;
+import com.pi4j.io.gpio.GpioController;
+import com.pi4j.io.gpio.GpioFactory;
+import com.pi4j.io.gpio.GpioPinPwmOutput;
+import com.pi4j.io.gpio.Pin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.util.Properties;
 
 public class LedController {
 
@@ -13,19 +15,17 @@ public class LedController {
 
 	private final GpioController gpio;
 
-	private Properties moduleProperties;
-
-	private Pin redPinNumber;
-	private Pin greenPinNumber;
-	private Pin bluePinNumber;
+	private Pin redGpio;
+	private Pin greenGpio;
+	private Pin blueGpio;
 
 	private GpioPinPwmOutput redPin;
 	private GpioPinPwmOutput greenPin;
 	private GpioPinPwmOutput bluePin;
 
-	private Object pinLock = new Object();
-	private Object enableLock = new Object();
-	private Object colorLock = new Object();
+	private final Object pinLock = new Object();
+	private final Object enableLock = new Object();
+	private final Object colorLock = new Object();
 
 	/**
 	 * Whether the LEDs are enabled or not.
@@ -37,8 +37,10 @@ public class LedController {
 	 */
 	private Color currentColor;
 
-	public LedController(Properties moduleProperties) {
-		this.moduleProperties = moduleProperties;
+	LedController(Pin redGpio, Pin greenGpio, Pin blueGpio) {
+		this.redGpio = redGpio;
+		this.greenGpio = greenGpio;
+		this.blueGpio = blueGpio;
 
 		logger = LoggerFactory.getLogger(LedController.class);
 		gpio = GpioFactory.getInstance();
@@ -52,20 +54,12 @@ public class LedController {
 	 * Set pwmRange for each pin to 100
 	 * </p>
 	 */
-	public void initLeds() {
+	void initLeds() {
 		logger.info("Initializing LEDs...");
 
-		int redGPIO = Integer.parseInt(moduleProperties.getProperty("led_gpio_r", "0"));
-		int greenGPIO = Integer.parseInt(moduleProperties.getProperty("led_gpio_g", "2"));
-		int blueGPIO = Integer.parseInt(moduleProperties.getProperty("led_gpio_b", "3"));
-
-		redPinNumber = RaspiPin.getPinByAddress(redGPIO);
-		greenPinNumber = RaspiPin.getPinByAddress(greenGPIO);
-		bluePinNumber = RaspiPin.getPinByAddress(blueGPIO);
-
-		redPin = gpio.provisionSoftPwmOutputPin(redPinNumber, "red");
-		greenPin = gpio.provisionSoftPwmOutputPin(greenPinNumber, "green");
-		bluePin = gpio.provisionSoftPwmOutputPin(bluePinNumber, "blue");
+		redPin = gpio.provisionSoftPwmOutputPin(redGpio, "red");
+		greenPin = gpio.provisionSoftPwmOutputPin(greenGpio, "green");
+		bluePin = gpio.provisionSoftPwmOutputPin(blueGpio, "blue");
 
 		redPin.setPwmRange(100);
 		greenPin.setPwmRange(100);
@@ -78,7 +72,7 @@ public class LedController {
 	/**
 	 * Enables the LEDs
 	 */
-	public void enableLeds() {
+	private void enableLeds() {
 		logger.debug("Enabling LEDs");
 
 		synchronized (enableLock) {
@@ -145,7 +139,7 @@ public class LedController {
 	 *
 	 * @param color
 	 */
-	public void setLedColor(Color color) {
+	private void setLedColor(Color color) {
 		logger.debug("Setting LED color (" + color + ")");
 
 		synchronized (colorLock) {
@@ -158,7 +152,7 @@ public class LedController {
 	/**
 	 * Returns the last set Color. (Even if LEDs are disabled)
 	 *
-	 * @return
+	 * @return color
 	 */
 	public Color getLedColor() {
 		synchronized (colorLock) {

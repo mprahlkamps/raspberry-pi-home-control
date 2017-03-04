@@ -1,0 +1,51 @@
+{
+	"led_controller": [
+		{
+			"enabled": true,
+			"name": "LEDs Wohnzimmer",
+			"gpio_red": 0,
+			"gpio_green": 2,
+			"gpio_blue": 3
+		},
+		{
+			"enabled": false,
+			"name": "LED Controller 2",
+			"gpio_red": 4,
+			"gpio_green": 5,
+			"gpio_blue": 6
+		}
+	],
+	"sa_led_controller": [
+		{
+			"enabled": false,
+			"name": "SA LED Controller 1",
+			"gpio_data": 0
+		},
+		{
+			"enabled": false,
+			"name": "SA LED Controller 2",
+			"gpio_data": 0
+		}
+	],
+	"remote_socket_controller": [
+		{
+			"enabled": true,
+			"name": "Lichter",
+			"gpio_transmit": 1,
+			"sockets": [
+				{
+					"name": "Max Schreibtisch",
+					"type": "A",
+					"group": "11011",
+					"device": "10000"
+				},
+				{
+					"name": "Max Kommode",
+					"type": "A",
+					"group": "11011",
+					"device": "01000"
+				}
+			]
+		}
+	]
+}

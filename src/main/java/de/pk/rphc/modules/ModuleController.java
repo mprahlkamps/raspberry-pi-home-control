@@ -1,97 +1,139 @@
 package de.pk.rphc.modules;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.pi4j.io.gpio.Pin;
 import com.pi4j.io.gpio.RaspiPin;
-import org.json.JSONArray;
+import de.pk.rphc.model.Socket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
+import java.io.FileReader;
 
 public class ModuleController {
 
-	private static final int MAX_LED_STRIPS = 5;
-	private static final int MAX_SA_LED_STRIPS = 10;
-
 	private Logger logger;
-	private Properties moduleProperties;
 
 	private LedController[] ledController;
-	private SaLedController[] saLedController;
-	private LightController lightController;
+	private LightController[] lightController;
 	private MusicController musicController;
 
 	private ModuleController() {
 		logger = LoggerFactory.getLogger(ModuleController.class);
-		ledController = new LedController[MAX_LED_STRIPS];
-		saLedController = new SaLedController[MAX_SA_LED_STRIPS];
 	}
 
 	public void loadModules() {
-		loadProperties();
-
 		logger.info("Loading Modules...");
 
-		for (int i = 0; i < MAX_LED_STRIPS; i++) {
-			int configCount = i + 1;
+		JsonObject configuration = loadModuleConfiguration();
 
-			if (moduleProperties.containsKey("enable_led_controller_" + configCount)) {
-				if (moduleProperties.getProperty("enable_led_controller_" + configCount).equals("true")) {
-					logger.info("Enabling LedController " + configCount);
+		if (configuration.has("led_controller")) {
+			JsonArray ledStripArray = configuration.getAsJsonArray("led_controller");
+			ledController = new LedController[ledStripArray.size()];
 
-					int redGPIO = Integer.parseInt(moduleProperties.getProperty("gpio_led_r_" + configCount, "0"));
-					int greenGPIO = Integer.parseInt(moduleProperties.getProperty("gpio_led_g_" + configCount, "2"));
-					int blueGPIO = Integer.parseInt(moduleProperties.getProperty("gpio_led_b_" + configCount, "3"));
+			for (int i = 0; i < ledStripArray.size(); i++) {
+				JsonObject ledStrip = (JsonObject) ledStripArray.get(i);
+				if (ledStrip.get("enabled").getAsBoolean()) {
+					logger.info("Activating " + ledStrip.get("name").getAsString());
 
-					Pin redPin = RaspiPin.getPinByAddress(redGPIO);
-					Pin greenPin = RaspiPin.getPinByAddress(greenGPIO);
-					Pin bluePin = RaspiPin.getPinByAddress(blueGPIO);
+					Pin redPin = RaspiPin.getPinByAddress(ledStrip.get("gpio_red").getAsInt());
+					Pin greenPin = RaspiPin.getPinByAddress(ledStrip.get("gpio_green").getAsInt());
+					Pin bluePin = RaspiPin.getPinByAddress(ledStrip.get("gpio_blue").getAsInt());
 
-					ledController[i] = new LedController(redPin, greenPin, bluePin);
-					ledController[i].initLeds();
+					ledController[i] = new LedController(ledStrip.get("name").getAsString(), redPin, greenPin, bluePin);
+					ledController[i].initialize();
 				}
 			}
 		}
 
-		for (int i = 0; i < MAX_SA_LED_STRIPS; i++) {
-			int configCount = i + 1;
+		if (configuration.has("remote_socket_controller")) {
+			JsonArray transmitterArray = configuration.getAsJsonArray("remote_socket_controller");
+			lightController = new LightController[transmitterArray.size()];
 
-			if (moduleProperties.containsKey("enable_sa_led_controller_" + configCount)) {
-				if (moduleProperties.getProperty("enable_sa_led_controller_" + configCount).equals("true")) {
-					logger.warn("SA LED Controller not implemented yet!");
+			for (int i = 0; i < transmitterArray.size(); i++) {
+				JsonObject transmitter = (JsonObject) transmitterArray.get(i);
+				if (transmitter.get("enabled").getAsBoolean()) {
+					logger.info("Activating " + transmitter.get("name").getAsString());
+
+					Pin transmitterPin = RaspiPin.getPinByAddress(transmitter.get("gpio_transmit").getAsInt());
+
+					JsonArray socketArray = transmitter.getAsJsonArray("sockets");
+					Socket[] sockets = new Socket[socketArray.size()];
+
+					for (int j = 0; j < socketArray.size(); j++) {
+						JsonObject socket = (JsonObject) socketArray.get(j);
+						sockets[j] = new Socket(socket.get("name").getAsString(), socket.get("group").getAsString(), socket.get("device").getAsString());
+					}
+
+					lightController[i] = new LightController(transmitter.get("name").getAsString(), transmitterPin, sockets);
+					lightController[i].initialize();
 				}
 			}
-		}
-
-		if (moduleProperties.getProperty("enable_light_controller").equals("true")) {
-			logger.info("Enabling LightController");
-
-			int transmitterGpio = Integer.parseInt(moduleProperties.getProperty("gpio_light_transmitter", "1"));
-			lightController = new LightController(RaspiPin.getPinByAddress(transmitterGpio));
 		}
 
 		logger.info("Done loading Modules!");
 	}
 
-	public JSONArray getAvailableModules() {
-		return new JSONArray();
-	}
-
-	private void loadProperties() {
-		moduleProperties = new Properties();
+	private JsonObject loadModuleConfiguration() {
+		JsonObject configuration = null;
 
 		try {
-			InputStream in = new FileInputStream("modules.properties");
-			moduleProperties.load(in);
+			FileReader reader = new FileReader("modules.json");
+			configuration = (JsonObject) new JsonParser().parse(reader);
+
 		} catch (FileNotFoundException e) {
-			logger.error("Error loading modules.moduleProperties", e);
-		} catch (IOException e) {
-			logger.error("Error loading modules.moduleProperties", e);
+			e.printStackTrace();
 		}
+
+		return configuration;
+	}
+
+	public JsonObject getAvailableModules() {
+		JsonObject modules = new JsonObject();
+		JsonArray ledStripModules = new JsonArray();
+
+		for (int i = 0; i < ledController.length; i++) {
+			if (ledController[i] != null) {
+				JsonObject ledStrip = new JsonObject();
+				ledStrip.addProperty("name", ledController[i].getName());
+				ledStripModules.add(ledStrip);
+			}
+		}
+
+		modules.add("led_controller", ledStripModules);
+
+		JsonArray transmitterModules = new JsonArray();
+
+		for (int i = 0; i < lightController.length; i++) {
+			if (lightController[i] != null) {
+				JsonObject transmitter = new JsonObject();
+				transmitter.addProperty("name", lightController[i].getName());
+
+				JsonArray socketArray = new JsonArray();
+				Socket[] sockets = lightController[i].getSockets();
+				for (int j = 0; j < sockets.length; j++) {
+					JsonObject socket = new JsonObject();
+					socket.addProperty("name", sockets[j].name);
+					socketArray.add(socket);
+				}
+				transmitter.add("sockets", socketArray);
+				transmitterModules.add(transmitter);
+			}
+		}
+
+		modules.add("remote_socket_controller", transmitterModules);
+
+		return modules;
+	}
+
+	public LedController getLedController(int index) {
+		return ledController[index];
+	}
+
+	public LightController getLightController(int index) {
+		return lightController[index];
 	}
 
 	public static ModuleController getInstance() {

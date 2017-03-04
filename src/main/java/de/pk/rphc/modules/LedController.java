@@ -13,8 +13,7 @@ public class LedController {
 
 	private Logger logger;
 
-	private final GpioController gpio;
-
+	private String name;
 	private Pin redGpio;
 	private Pin greenGpio;
 	private Pin blueGpio;
@@ -37,13 +36,13 @@ public class LedController {
 	 */
 	private Color currentColor;
 
-	LedController(Pin redGpio, Pin greenGpio, Pin blueGpio) {
+	LedController(String name, Pin redGpio, Pin greenGpio, Pin blueGpio) {
+		this.name = name;
 		this.redGpio = redGpio;
 		this.greenGpio = greenGpio;
 		this.blueGpio = blueGpio;
 
 		logger = LoggerFactory.getLogger(LedController.class);
-		gpio = GpioFactory.getInstance();
 	}
 
 	/**
@@ -54,9 +53,10 @@ public class LedController {
 	 * Set pwmRange for each pin to 100
 	 * </p>
 	 */
-	void initLeds() {
+	void initialize() {
 		logger.info("Initializing LEDs...");
 
+		final GpioController gpio = GpioFactory.getInstance();
 		redPin = gpio.provisionSoftPwmOutputPin(redGpio, "red");
 		greenPin = gpio.provisionSoftPwmOutputPin(greenGpio, "green");
 		bluePin = gpio.provisionSoftPwmOutputPin(blueGpio, "blue");
@@ -139,7 +139,7 @@ public class LedController {
 	 *
 	 * @param color
 	 */
-	private void setLedColor(Color color) {
+	public void setLedColor(Color color) {
 		logger.debug("Setting LED color (" + color + ")");
 
 		synchronized (colorLock) {
@@ -171,4 +171,7 @@ public class LedController {
 		}
 	}
 
+	public String getName() {
+		return name;
+	}
 }

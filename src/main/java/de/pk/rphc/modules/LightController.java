@@ -5,32 +5,43 @@ import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
 import com.pi4j.io.gpio.Pin;
 import com.pi4j.wiringpi.Gpio;
+import de.pk.rphc.model.Socket;
 
 public class LightController {
 
 	private final int pulseLength = 350;
 	private final int repeatTransmit = 10;
 
+	private String name;
 	private Pin transmitterGpio;
+	private Socket[] sockets;
 
 	private GpioPinDigitalOutput transmitterPin;
 
-	public LightController(Pin transmitterGpio) {
+	public LightController(String name, Pin transmitterGpio, Socket[] sockets) {
+		this.name = name;
 		this.transmitterGpio = transmitterGpio;
-
-		final GpioController gpio = GpioFactory.getInstance();
-		this.transmitterPin = gpio.provisionDigitalOutputPin(transmitterGpio);
-
-		switchOffDIP("11011", "10000");
-		switchOnDIP("11011", "10000");
-
+		this.sockets = sockets;
 	}
 
-	public void switchOnDIP(String group, String device) {
+	void initialize() {
+		final GpioController gpio = GpioFactory.getInstance();
+		transmitterPin = gpio.provisionDigitalOutputPin(transmitterGpio);
+	}
+
+	public void switchOn(int id) {
+		switchOnDIP(sockets[id].group, sockets[id].device);
+	}
+
+	public void switchOff(int id) {
+		switchOffDIP(sockets[id].group, sockets[id].device);
+	}
+
+	private void switchOnDIP(String group, String device) {
 		sendTriState(getCodeWordA(group, device, true));
 	}
 
-	public void switchOffDIP(String group, String device) {
+	private void switchOffDIP(String group, String device) {
 		sendTriState(getCodeWordA(group, device, false));
 	}
 
@@ -99,5 +110,13 @@ public class LightController {
 			this.transmitterPin.low();
 			Gpio.delayMicroseconds(this.pulseLength * nLowPulses);
 		}
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public Socket[] getSockets() {
+		return sockets;
 	}
 }

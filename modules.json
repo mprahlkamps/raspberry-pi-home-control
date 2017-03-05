@@ -34,16 +34,40 @@
 			"gpio_transmit": 1,
 			"sockets": [
 				{
-					"name": "Max Schreibtisch",
+					"name": "Max's Schreibtisch",
 					"type": "A",
 					"group": "11011",
 					"device": "10000"
 				},
 				{
-					"name": "Max Kommode",
+					"name": "Max's Kommode",
 					"type": "A",
 					"group": "11011",
 					"device": "01000"
+				},
+				{
+					"name": "Küchentisch",
+					"type": "A",
+					"group": "10111",
+					"device": "10000"
+				},
+				{
+					"name": "Küchenschrank",
+					"type": "A",
+					"group": "10111",
+					"device": "00100"
+				},
+				{
+					"name": "Test 1",
+					"type": "A",
+					"group": "10111",
+					"device": "01000"
+				},
+				{
+					"name": "Test 2",
+					"type": "A",
+					"group": "10111",
+					"device": "00010"
 				}
 			]
 		}

@@ -20,10 +20,44 @@ todo
 - [ ] support more socket types
 - [ ] make json parsing more fail-safe
 - [ ] support single addressable led strips
+- [ ] support more hardware
 
 ## Protocol
 
 RPHC uses a JSON message protocol.
+
+**_Control LED strips_**
+
+When there are led strips available you can control them like this:
+
+``` json
+{
+    "type": "control",
+    "module": "led_controller",
+    "controller_id": 0,
+    "red": 255,
+    "green": 0,
+    "blue": 0
+}
+```
+
+to set the first led controller to fully red.
+
+**_Control remote sockets_**
+
+When there are remote sockets available you'll be able to control them like this:
+
+``` json
+{
+    "type": "control",
+    "module": "remote_socket_controller",
+    "controller_id": 0,
+    "socket_id": 0,
+    "value": 1
+}
+```
+
+to turn the first socket of the first controller to ON.
 
 **_Connection_**
 
@@ -60,35 +94,13 @@ useful information to setup the client.
 }
 ```
 
-**_Control LED strips_**
+**_Errors_**
 
-When there are led strips available you can control them like this:
-
-``` json
-{
-    "type": "control",
-    "module": "led_controller",
-    "controller_id": 0,
-    "red": 255,
-    "green": 0,
-    "blue": 0
-}
-```
-
-to set the first led controller to fully red.
-
-**_Control remote sockets_**
-
-When there are remote sockets available you'll be able to control them like this:
+When a client sends a malformed message the server replies with this error message
 
 ``` json
 {
-    "type": "control",
-    "module": "remote_socket_controller",
-    "controller_id": 0,
-    "socket_id": 0,
-    "value": 1
+    "type": "error",
+    "message": "Cause of the error"
 }
 ```
-
-to turn the first socket of the first controller to ON.

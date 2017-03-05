@@ -27,32 +27,124 @@ public class ServerControl extends WebSocketServer {
 	}
 
 	@Override
+	public void onStart() {
+	}
+
+	@Override
 	public void onMessage(WebSocket connection, String message) {
 		logger.debug("(" + connection.getRemoteSocketAddress() + ") New message: " + message);
 
 		JsonObject jsonMessage = (JsonObject) new JsonParser().parse(message);
 
+		if (!jsonMessage.has("type")) {
+			logger.warn("Received malformed message (no 'type' property)");
+			sendErrorMessage(connection, "Received malformed message (no 'type' property)");
+			return;
+		}
+
 		if (jsonMessage.get("type").getAsString().equals("control")) {
 
+			if (!jsonMessage.has("module")) {
+				logger.warn("Received malformed message (no 'module' property)");
+				sendErrorMessage(connection, "Received malformed message (no 'module' property)");
+				return;
+			}
+
 			if (jsonMessage.get("module").getAsString().equals("remote_socket_controller")) {
+
+				if (!jsonMessage.has("controller_id")) {
+					logger.warn("Received malformed message (no 'controller_id' property)");
+					sendErrorMessage(connection, "Received malformed message (no 'controller_id' property)");
+					return;
+				}
+
+				if (!jsonMessage.has("socket_id")) {
+					logger.warn("Received malformed message (no 'socket_id' property)");
+					sendErrorMessage(connection, "Received malformed message (no 'socket_id' property)");
+					return;
+				}
+
+				if (!jsonMessage.has("value")) {
+					logger.warn("Received malformed message (no 'value' property)");
+					sendErrorMessage(connection, "Received malformed message (no 'value' property)");
+					return;
+				}
+
 				int controllerId = jsonMessage.get("controller_id").getAsInt();
 				int socketId = jsonMessage.get("socket_id").getAsInt();
 				int value = jsonMessage.get("value").getAsInt();
 
 				if (value == 1) {
-					moduleController.getLightController(controllerId).switchOn(socketId);
+					moduleController.getLightController(controllerId).switchDip(socketId, true);
 				} else {
-					moduleController.getLightController(controllerId).switchOff(socketId);
+					moduleController.getLightController(controllerId).switchDip(socketId, false);
 				}
 
-			} else if (jsonMessage.get("module").getAsString().equals("led_controller")) {
+			} else if (jsonMessage.get("module").getAsString().equals("sa_led_controller")) {
+
+				if (!jsonMessage.has("controller_id")) {
+					logger.warn("Received malformed message (no 'controller_id' property)");
+					sendErrorMessage(connection, "Received malformed message (no 'controller_id' property)");
+					return;
+				}
+
+				if (!jsonMessage.has("red")) {
+					logger.warn("Received malformed message (no 'red' property)");
+					sendErrorMessage(connection, "Received malformed message (no 'red' property)");
+					return;
+				}
+				if (!jsonMessage.has("green")) {
+					logger.warn("Received malformed message (no 'green' property)");
+					sendErrorMessage(connection, "Received malformed message (no 'green' property)");
+					return;
+				}
+				if (!jsonMessage.has("blue")) {
+					logger.warn("Received malformed message (no 'blue' property)");
+					sendErrorMessage(connection, "Received malformed message (no 'blue' property)");
+					return;
+				}
+
 				int controllerId = jsonMessage.get("controller_id").getAsInt();
 
 				int red = jsonMessage.get("red").getAsInt();
 				int green = jsonMessage.get("green").getAsInt();
 				int blue = jsonMessage.get("blue").getAsInt();
 
-				moduleController.getLedController(controllerId).setLedColor(new Color(red, green, blue));
+				moduleController.getSaLedController(controllerId).setColor(new Color(red, green, blue));
+				moduleController.getSaLedController(controllerId).show();
+
+			} else if (jsonMessage.get("module").getAsString().equals("led_controller")) {
+
+				if (!jsonMessage.has("controller_id")) {
+					logger.warn("Received malformed message (no 'controller_id' property)");
+					sendErrorMessage(connection, "Received malformed message (no 'controller_id' property)");
+					return;
+				}
+
+				if (!jsonMessage.has("red")) {
+					logger.warn("Received malformed message (no 'red' property)");
+					sendErrorMessage(connection, "Received malformed message (no 'red' property)");
+					return;
+				}
+				if (!jsonMessage.has("green")) {
+					logger.warn("Received malformed message (no 'green' property)");
+					sendErrorMessage(connection, "Received malformed message (no 'green' property)");
+					return;
+				}
+				if (!jsonMessage.has("blue")) {
+					logger.warn("Received malformed message (no 'blue' property)");
+					sendErrorMessage(connection, "Received malformed message (no 'blue' property)");
+					return;
+				}
+
+				int controllerId = jsonMessage.get("controller_id").getAsInt();
+
+				int red = jsonMessage.get("red").getAsInt();
+				int green = jsonMessage.get("green").getAsInt();
+				int blue = jsonMessage.get("blue").getAsInt();
+
+				moduleController.getLedController(controllerId).setColor(new Color(red, green, blue));
+
 			}
 
 		}
@@ -79,5 +171,12 @@ public class ServerControl extends WebSocketServer {
 		welcomeMessage.addProperty("type", "welcome");
 		welcomeMessage.add("available-modules", moduleController.getAvailableModules());
 		connection.send(welcomeMessage.toString());
+	}
+
+	private void sendErrorMessage(WebSocket connection, String message) {
+		JsonObject errorMessage = new JsonObject();
+		errorMessage.addProperty("type", "error");
+		errorMessage.addProperty("message", message);
+		connection.send(errorMessage.toString());
 	}
 }

@@ -18,31 +18,43 @@ public class App {
 	public static void main(String[] args) {
 
 		Logger logger = LoggerFactory.getLogger(App.class);
-
 		Properties config = new Properties();
 
 		try {
 			InputStream in = new FileInputStream("config.properties");
 			config.load(in);
 		} catch (FileNotFoundException e) {
-			logger.error("Error while reading config.properties", e);
+			logger.error("config.properties not found", e);
 		} catch (IOException e) {
 			logger.error("Error while reading config.properties", e);
 		}
 
-		ModuleController moduleController = ModuleController.getInstance();
+		final ModuleController moduleController = ModuleController.getInstance();
 		moduleController.loadModules();
 
-		if (config.getProperty("enable_server_control", "true").equals("true")) {
-			int port = Integer.parseInt(config.getProperty("server_port", "9999"));
-			ServerControl server = new ServerControl(new InetSocketAddress(port));
-			server.start();
-		}
+		int port = Integer.parseInt(config.getProperty("server_port", "9999"));
+		final ServerControl server = new ServerControl(new InetSocketAddress(port));
 
-		if (config.getProperty("enable_speech_control", "true").equals("true")) {
-			SpeechControl speech = new SpeechControl();
-			speech.start();
-		}
+		server.start();
+
+//		if (config.getProperty("enable_speech_control", "true").equals("true")) {
+//			SpeechControl speech = new SpeechControl();
+//			speech.start();
+//		}
+
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				try {
+					server.stop();
+					moduleController.stop();
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		});
 
 	}
 

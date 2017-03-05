@@ -1,7 +1,7 @@
 {
 	"led_controller": [
 		{
-			"enabled": true,
+			"enabled": false,
 			"name": "LEDs Wohnzimmer",
 			"gpio_red": 0,
 			"gpio_green": 2,
@@ -15,35 +15,56 @@
 			"gpio_blue": 6
 		}
 	],
+
 	"sa_led_controller": [
 		{
-			"enabled": false,
+			"enabled": true,
 			"name": "SA LED Controller 1",
-			"gpio_data": 0
-		},
-		{
-			"enabled": false,
-			"name": "SA LED Controller 2",
-			"gpio_data": 0
+			"led_count":88
 		}
 	],
+
 	"remote_socket_controller": [
 		{
 			"enabled": true,
 			"name": "Lichter",
-			"gpio_transmit": 1,
+			"gpio_transmit": 0,
 			"sockets": [
 				{
-					"name": "Max Schreibtisch",
+					"name": "Max's Schreibtisch",
 					"type": "A",
 					"group": "11011",
 					"device": "10000"
 				},
 				{
-					"name": "Max Kommode",
+					"name": "Max Bett",
+					"type": "A",
+					"group": "10111",
+					"device": "01000"
+				},
+				{
+					"name": "Max's Kommode",
 					"type": "A",
 					"group": "11011",
 					"device": "01000"
+				},
+				{
+					"name": "Küchentisch",
+					"type": "A",
+					"group": "10111",
+					"device": "10000"
+				},
+				{
+					"name": "Küchenschrank",
+					"type": "A",
+					"group": "10111",
+					"device": "00100"
+				},
+				{
+					"name": "Test 2",
+					"type": "A",
+					"group": "10111",
+					"device": "00010"
 				}
 			]
 		}

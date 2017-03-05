@@ -1,9 +1,6 @@
 package de.pk.rphc.modules;
 
-import com.pi4j.io.gpio.GpioController;
-import com.pi4j.io.gpio.GpioFactory;
-import com.pi4j.io.gpio.GpioPinPwmOutput;
-import com.pi4j.io.gpio.Pin;
+import com.pi4j.io.gpio.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,11 +58,15 @@ public class LedController {
 		greenPin = gpio.provisionSoftPwmOutputPin(greenGpio, "green");
 		bluePin = gpio.provisionSoftPwmOutputPin(blueGpio, "blue");
 
+		redPin.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
+		greenPin.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
+		bluePin.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
+
 		redPin.setPwmRange(100);
 		greenPin.setPwmRange(100);
 		bluePin.setPwmRange(100);
 
-		setLedColor(Color.blue);
+		setColor(Color.blue);
 		enableLeds();
 	}
 
@@ -133,13 +134,17 @@ public class LedController {
 
 	}
 
+	public void stop() {
+		logger.info("Stopping Led Controller (" + name + ")");
+	}
+
 	/**
 	 * Sets the color of the LEDs. (Even if LEDs are disabled) Color is set when
 	 * they are enabled the next time.
 	 *
 	 * @param color
 	 */
-	public void setLedColor(Color color) {
+	public void setColor(Color color) {
 		logger.debug("Setting LED color (" + color + ")");
 
 		synchronized (colorLock) {

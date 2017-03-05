@@ -1,16 +1,16 @@
 package de.pk.rphc.modules;
 
-import com.pi4j.io.gpio.GpioController;
-import com.pi4j.io.gpio.GpioFactory;
-import com.pi4j.io.gpio.GpioPinDigitalOutput;
-import com.pi4j.io.gpio.Pin;
+import com.pi4j.io.gpio.*;
 import com.pi4j.wiringpi.Gpio;
 import de.pk.rphc.model.Socket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class LightController {
+public class SocketController {
 
 	private final int pulseLength = 350;
 	private final int repeatTransmit = 10;
+	private final Logger logger;
 
 	private String name;
 	private Pin transmitterGpio;
@@ -18,31 +18,21 @@ public class LightController {
 
 	private GpioPinDigitalOutput transmitterPin;
 
-	public LightController(String name, Pin transmitterGpio, Socket[] sockets) {
+	public SocketController(String name, Pin transmitterGpio, Socket[] sockets) {
 		this.name = name;
 		this.transmitterGpio = transmitterGpio;
 		this.sockets = sockets;
+		this.logger = LoggerFactory.getLogger(ModuleController.class);
 	}
 
 	void initialize() {
 		final GpioController gpio = GpioFactory.getInstance();
 		transmitterPin = gpio.provisionDigitalOutputPin(transmitterGpio);
+		transmitterPin.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
 	}
 
-	public void switchOn(int id) {
-		switchOnDIP(sockets[id].group, sockets[id].device);
-	}
-
-	public void switchOff(int id) {
-		switchOffDIP(sockets[id].group, sockets[id].device);
-	}
-
-	private void switchOnDIP(String group, String device) {
-		sendTriState(getCodeWordA(group, device, true));
-	}
-
-	private void switchOffDIP(String group, String device) {
-		sendTriState(getCodeWordA(group, device, false));
+	public void switchDip(int id, boolean state) {
+		sendTriState(getCodeWordA(sockets[id].group, sockets[id].device, state));
 	}
 
 	private String getCodeWordA(String group, String device, boolean status) {
@@ -110,6 +100,10 @@ public class LightController {
 			this.transmitterPin.low();
 			Gpio.delayMicroseconds(this.pulseLength * nLowPulses);
 		}
+	}
+
+	public void stop() {
+		logger.info("Stopping Socket Controller (" + name + ")");
 	}
 
 	public String getName() {

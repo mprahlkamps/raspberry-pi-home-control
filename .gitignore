@@ -19,6 +19,7 @@ buildNumber.properties
 # User-specific stuff:
 .idea/**/workspace.xml
 .idea/**/tasks.xml
+.idea/**/kotlinc.xml
 
 # Sensitive or high-churn files:
 .idea/**/dataSources/
@@ -65,3 +66,5 @@ fabric.properties
 # *.ipr
 
 # End of https://www.gitignore.io/api/intellij
+
+*.iml

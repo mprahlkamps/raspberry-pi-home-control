@@ -30,36 +30,36 @@ public class ModuleController {
 		JsonObject configuration = loadModuleConfiguration();
 
 		if (configuration.has("led_controller")) {
-			JsonArray ledStripArray = configuration.getAsJsonArray("led_controller");
-			ledController = new LedController[ledStripArray.size()];
+			JsonArray ledControllerArray = configuration.getAsJsonArray("led_controller");
+			ledController = new LedController[ledControllerArray.size()];
 
-			for (int i = 0; i < ledStripArray.size(); i++) {
-				JsonObject ledStrip = (JsonObject) ledStripArray.get(i);
-				if (ledStrip.get("enabled").getAsBoolean()) {
-					logger.info("Activating " + ledStrip.get("name").getAsString());
+			for (int i = 0; i < ledControllerArray.size(); i++) {
+				JsonObject ledController = (JsonObject) ledControllerArray.get(i);
+				if (ledController.get("enabled").getAsBoolean()) {
+					logger.info("Activating LEDs (" + ledController.get("name").getAsString() + ")");
 
-					Pin redPin = RaspiPin.getPinByAddress(ledStrip.get("gpio_red").getAsInt());
-					Pin greenPin = RaspiPin.getPinByAddress(ledStrip.get("gpio_green").getAsInt());
-					Pin bluePin = RaspiPin.getPinByAddress(ledStrip.get("gpio_blue").getAsInt());
+					Pin redPin = RaspiPin.getPinByAddress(ledController.get("gpio_red").getAsInt());
+					Pin greenPin = RaspiPin.getPinByAddress(ledController.get("gpio_green").getAsInt());
+					Pin bluePin = RaspiPin.getPinByAddress(ledController.get("gpio_blue").getAsInt());
 
-					ledController[i] = new LedController(ledStrip.get("name").getAsString(), redPin, greenPin, bluePin);
-					ledController[i].initialize();
+					this.ledController[i] = new LedController(ledController.get("name").getAsString(), redPin, greenPin, bluePin);
+					this.ledController[i].initialize();
 				}
 			}
 		}
 
 		if (configuration.has("remote_socket_controller")) {
-			JsonArray transmitterArray = configuration.getAsJsonArray("remote_socket_controller");
-			lightController = new LightController[transmitterArray.size()];
+			JsonArray remoteSocketControllerArray = configuration.getAsJsonArray("remote_socket_controller");
+			lightController = new LightController[remoteSocketControllerArray.size()];
 
-			for (int i = 0; i < transmitterArray.size(); i++) {
-				JsonObject transmitter = (JsonObject) transmitterArray.get(i);
-				if (transmitter.get("enabled").getAsBoolean()) {
-					logger.info("Activating " + transmitter.get("name").getAsString());
+			for (int i = 0; i < remoteSocketControllerArray.size(); i++) {
+				JsonObject remoteSocketController = (JsonObject) remoteSocketControllerArray.get(i);
+				if (remoteSocketController.get("enabled").getAsBoolean()) {
+					logger.info("Activating Remote Socket Controller (" + remoteSocketController.get("name").getAsString() + ")");
 
-					Pin transmitterPin = RaspiPin.getPinByAddress(transmitter.get("gpio_transmit").getAsInt());
+					Pin transmitterPin = RaspiPin.getPinByAddress(remoteSocketController.get("gpio_transmit").getAsInt());
 
-					JsonArray socketArray = transmitter.getAsJsonArray("sockets");
+					JsonArray socketArray = remoteSocketController.getAsJsonArray("sockets");
 					Socket[] sockets = new Socket[socketArray.size()];
 
 					for (int j = 0; j < socketArray.size(); j++) {
@@ -67,7 +67,7 @@ public class ModuleController {
 						sockets[j] = new Socket(socket.get("name").getAsString(), socket.get("group").getAsString(), socket.get("device").getAsString());
 					}
 
-					lightController[i] = new LightController(transmitter.get("name").getAsString(), transmitterPin, sockets);
+					lightController[i] = new LightController(remoteSocketController.get("name").getAsString(), transmitterPin, sockets);
 					lightController[i].initialize();
 				}
 			}

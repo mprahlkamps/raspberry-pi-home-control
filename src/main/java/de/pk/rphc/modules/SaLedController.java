@@ -60,7 +60,7 @@ public class SaLedController {
 	}
 
 	public void setColor(Color ledColor) {
-		for(int i = 0; i < ledCount; i++) {
+		for (int i = 0; i < ledCount; i++) {
 			setColor(i, ledColor);
 		}
 	}

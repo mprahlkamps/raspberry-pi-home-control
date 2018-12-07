@@ -190,7 +190,7 @@ public class ModuleController {
 			aSaLedController.stop();
 		}
 
-		for (SocketController aSocketController: socketController) {
+		for (SocketController aSocketController : socketController) {
 			aSocketController.stop();
 		}
 
